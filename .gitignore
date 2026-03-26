@@ -1,0 +1,12 @@
+# Secretos — nunca subir al repositorio
+.env
+security/mongodb.key
+
+# CSV generado — puede pesar varios GB
+simulador/data/usuarios_sinteticos.csv
+
+# Artefactos de compilación de Rust
+simulador/target/
+
+# macOS
+.DS_Store

@@ -1,0 +1,127 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  Volúmenes
+# ─────────────────────────────────────────────────────────────────────────────
+volumes:
+  mongo_data:
+  pg_data:
+  csv_data:      # Compartido: chunkattack escribe, simulador lee
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Red
+# ─────────────────────────────────────────────────────────────────────────────
+networks:
+  cdc_network:
+    driver: bridge
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Servicios
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+
+  # ──────────────────────────────────────────────────────────────────────────
+  #  chunkattack — genera el CSV de 2M usuarios y termina (exit 0)
+  # ──────────────────────────────────────────────────────────────────────────
+  chunkattack:
+    build:
+      context: ./chunkattack
+      dockerfile: Dockerfile
+    container_name: chunkattack
+    restart: "no"
+    volumes:
+      - csv_data:/data
+    networks:
+      - cdc_network
+
+  # ──────────────────────────────────────────────────────────────────────────
+  #  MongoDB — Replica Set rs0, keyfile autogenerado si no existe
+  # ──────────────────────────────────────────────────────────────────────────
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb_container
+    restart: always
+    ports:
+      - "46100:27017"
+    env_file:
+      - .env
+    entrypoint: ["/scripts/mongo-entrypoint.sh"]
+    command:
+      - "--replSet"
+      - "rs0"
+      - "--bind_ip_all"
+      - "--port"
+      - "27017"
+      - "--keyFile"
+      - "/data/mongodb.key"
+      - "--auth"
+    volumes:
+      - mongo_data:/data/db
+      - ./scripts/mongo-entrypoint.sh:/scripts/mongo-entrypoint.sh:ro
+      - ./security/mongodb.key:/etc/mongodb.key:ro
+    networks:
+      - cdc_network
+    healthcheck:
+      # Se autentica con las credenciales del .env para verificar que
+      # MongoDB está listo Y el Replica Set responde correctamente
+      test:
+        - "CMD"
+        - "mongosh"
+        - "--quiet"
+        - "-u"
+        - "admin" # usuario
+        - "-p"
+        - "testing" # contraseña
+        - "--authenticationDatabase"
+        - "admin"
+        - "--eval"
+        - "db.adminCommand('ping').ok"
+      interval: 15s
+      timeout: 10s
+      retries: 12
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ──────────────────────────────────────────────────────────────────────────
+  #  PostgreSQL — Data Warehouse (futuro CDC)
+  # ──────────────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15
+    container_name: postgres_dw
+    restart: always
+    environment:
+      POSTGRES_USER:     admin # usuario
+      POSTGRES_PASSWORD: testing # contraseña
+      POSTGRES_DB:       datawarehouse
+    ports:
+      - "46101:5432"
+    networks:
+      - cdc_network
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  # ──────────────────────────────────────────────────────────────────────────
+  #  Simulador de carga — Rust
+  #  Espera: chunkattack exit 0  +  mongodb healthcheck OK
+  # ──────────────────────────────────────────────────────────────────────────
+  simulador:
+    build:
+      context: ./simulador
+      dockerfile: Dockerfile
+    container_name: simulador_carga
+    restart: "no"
+    depends_on:
+      chunkattack:
+        condition: service_completed_successfully
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_URI: "mongodb://admin:testing@mongodb:27017/?authSource=admin&directConnection=true"
+      CSV_PATH:  "/csv_data/usuarios_sinteticos.csv"
+    volumes:
+      - csv_data:/csv_data:ro
+    networks:
+      - cdc_network
+    tty:        true
+    stdin_open: true
