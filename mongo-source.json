@@ -1,0 +1,11 @@
+{
+  "name": "mongo-source-connector",
+  "config": {
+    "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+    "connection.uri": "mongodb://admin:testing@mongodb:27017/?replicaSet=rs0&authSource=admin",
+    "database": "SyntheticDB", 
+    "collection": "Users",
+    "pipeline": "[]",
+    "publish.full.document.only": "true" 
+  }
+}

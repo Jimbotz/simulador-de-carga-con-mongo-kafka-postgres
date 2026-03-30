@@ -37,8 +37,8 @@ fn mongo_uri() -> String {
     //})
     std::env::var("MONGO_URI").expect("MONGO_URI environment variable not set")
 }
-const NUM_WORKERS: usize = 4;
-const REGISTROS_A_CARGAR: usize = 2_000_000;
+const NUM_WORKERS: usize = 2;
+const REGISTROS_A_CARGAR: usize = 1_000_000;
 const IDS_POR_WORKER: usize = 50_000;
 const MAX_IDS_LOCALES: usize = 100_000; // techo para evitar memory leak
 const DURACION_SIMULACION_SEGS: u64 = 300; // 5 minutos exactos
@@ -81,12 +81,12 @@ struct Metricas {
 // ─────────────────────────────────────────────
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    println!("🚀 Iniciando Simulador de Carga en Rust...");
-    println!("⏱  Duración máxima: {} segundos (5 minutos)", DURACION_SIMULACION_SEGS);
+    println!("Iniciando Simulador de Carga en Rust...");
+    println!("Duración máxima: {} segundos (5 minutos)", DURACION_SIMULACION_SEGS);
 
     // Conexión a MongoDB
     let uri = mongo_uri();
-    println!("🔌 Conectando a: {}", uri);
+    println!("Conectando a: {}", uri);
     let client_options = ClientOptions::parse(&uri).await?;
     let client = Client::with_options(client_options)?;
     let db = client.database("SyntheticDB");
@@ -103,14 +103,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let conteo_actual = col_docs.count_documents(None, None).await.unwrap_or(0);
     if conteo_actual == 0 {
         println!(
-            "⚠️  Base de datos vacía detectada. Ejecutando fase de calentamiento ({} inserts)...",
+            "Base de datos vacía detectada. Ejecutando fase de calentamiento ({} inserts)...",
             REGISTROS_CALENTAMIENTO
         );
         fase_calentamiento(&col_docs, &datos, REGISTROS_CALENTAMIENTO).await;
-        println!("✅ Calentamiento completo.");
+        println!("Calentamiento completo.");
     } else {
         println!(
-            "ℹ️  BD con ~{} registros. Saltando calentamiento.",
+            "BD con ~{} registros. Saltando calentamiento.",
             conteo_actual
         );
     }
@@ -136,7 +136,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         let running_timer = Arc::clone(&running);
         tokio::spawn(async move {
             tokio::time::sleep(Duration::from_secs(DURACION_SIMULACION_SEGS)).await;
-            println!("\n🛑 Tiempo límite alcanzado. Enviando señal de parada...");
+            println!("\nTiempo límite alcanzado. Enviando señal de parada...");
             running_timer.store(false, Ordering::SeqCst);
         });
     }
@@ -170,7 +170,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Resumen final
     println!("\n══════════════════════════════════════════");
-    println!("📊 RESUMEN FINAL");
+    println!(" RESUMEN FINAL");
     println!("══════════════════════════════════════════");
     println!(
         "  Reads   : {}",
@@ -197,7 +197,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         metricas.errores_otros.load(Ordering::Relaxed)
     );
     println!("══════════════════════════════════════════");
-    println!("✅ Simulación finalizada.");
+    println!("Simulación finalizada.");
 
     Ok(())
 }
@@ -237,7 +237,7 @@ async fn trabajador(
     // Carga IDs usando $sample para distribución aleatoria real sobre toda la BD
     let mut ids_locales = cargar_ids_existentes_sample(&col, IDS_POR_WORKER).await;
     println!(
-        "✅ Worker {} listo con {} IDs locales",
+        "Worker {} listo con {} IDs locales",
         worker_id,
         ids_locales.len()
     );
@@ -356,7 +356,7 @@ async fn trabajador(
         let _ = tx_latencias.send(latencia_us);
     }
 
-    println!("👷 Worker {} detenido.", worker_id);
+    println!("Worker {} detenido.", worker_id);
 }
 
 // ─────────────────────────────────────────────
@@ -387,7 +387,7 @@ async fn monitor_metricas(
             let p99 = hist.value_at_percentile(99.0) as f64 / 1_000.0;
 
             println!(
-                "[{:>3}s] 🔥 {:>6} ops/s | Avg {:>6.2}ms | P95 {:>6.2}ms | P99 {:>6.2}ms \
+                "[{:>3}s] {:>6} ops/s | Avg {:>6.2}ms | P95 {:>6.2}ms | P99 {:>6.2}ms \
                  | R:{} W:{} U:{} D:{} Err:{}",
                 segundos,
                 ops,
@@ -402,7 +402,7 @@ async fn monitor_metricas(
                     + metricas.errores_otros.load(Ordering::Relaxed),
             );
         } else {
-            println!("[{:>3}s] ⏳ Esperando tráfico...", segundos);
+            println!("[{:>3}s] Esperando tráfico...", segundos);
         }
 
         hist.clear();
@@ -449,7 +449,7 @@ async fn cargar_ids_existentes_sample(
 //  CARGA DEL DATASET CSV
 // ─────────────────────────────────────────────
 async fn cargar_dataset() -> Result<Vec<Usuario>, Box<dyn Error>> {
-    println!("📂 Cargando registros del CSV en RAM...");
+    println!("Cargando registros del CSV en RAM...");
     
     let csv_path = std::env::var("CSV_PATH").unwrap_or_else(|_| "./csv_data/usuarios_sinteticos.csv".to_string());
     let file = File::open(&csv_path)?;
@@ -473,7 +473,7 @@ async fn cargar_dataset() -> Result<Vec<Usuario>, Box<dyn Error>> {
         });
     }
 
-    println!("✅ Registros cargados en RAM: {}", datos.len());
+    println!("Registros cargados en RAM: {}", datos.len());
     Ok(datos)
 }
 
@@ -498,7 +498,7 @@ async fn preparar_indices(
     col.create_indexes(vec![unique_index, estatus_index], None)
         .await?;
 
-    println!("✅ Índices listos.");
+    println!("Índices listos.");
     Ok(())
 }
 

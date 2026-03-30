@@ -8,7 +8,7 @@ from faker_persona_mx import PersonaGenerator
 logging.getLogger("faker_persona_mx").setLevel(logging.CRITICAL)
 
 ARCHIVO_SALIDA = "/data/usuarios_sinteticos.csv"
-TOTAL_REGISTROS = 2_000_000
+TOTAL_REGISTROS = 1_000_000 # dos millones de registros, eso se puede cambiar aca (1000000)
 TAMAÑO_LOTE    = 10_000
 
 
@@ -23,7 +23,7 @@ def ya_existe():
 
 def crear_dataset_masivo():
     if ya_existe():
-        print(f"✅ CSV ya existe en {ARCHIVO_SALIDA} — saltando generación.")
+        print(f" CSV ya existe en {ARCHIVO_SALIDA} — saltando generación.")
         return
 
     os.makedirs(os.path.dirname(ARCHIVO_SALIDA), exist_ok=True)
@@ -58,7 +58,7 @@ def crear_dataset_masivo():
                 print(f"Progreso: {progreso:,} / {TOTAL_REGISTROS:,} registros guardados...")
 
     tiempo_total = time.time() - tiempo_inicio
-    print(f"✅ ¡Completado! {ARCHIVO_SALIDA} generado en {tiempo_total:.2f}s")
+    print(f" ¡Completado! {ARCHIVO_SALIDA} generado en {tiempo_total:.2f}s")
 
 
 if __name__ == "__main__":

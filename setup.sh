@@ -6,13 +6,13 @@ set -e
 KEY_PATH="security/mongodb.key"
 
 if [ -f "$KEY_PATH" ] && [ -s "$KEY_PATH" ]; then
-    echo "✅ $KEY_PATH ya existe — sin cambios."
+    echo " $KEY_PATH ya existe — sin cambios."
 else
-    echo "🔑 Generando security/mongodb.key ..."
+    echo " Generando security/mongodb.key ..."
     mkdir -p security
     openssl rand -base64 756 > "$KEY_PATH"
     chmod 400 "$KEY_PATH"
-    echo "✅ $KEY_PATH generado."
+    echo " $KEY_PATH generado."
 fi
 
 echo ""

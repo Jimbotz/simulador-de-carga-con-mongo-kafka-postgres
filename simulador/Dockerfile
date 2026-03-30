@@ -41,4 +41,4 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=builder /build/target/release/simulador /app/simulador
 
-CMD ["/bin/bash", "-c", "/app/simulador; echo '✅ Simulador finalizado. Contenedor en espera.'; tail -f /dev/null"]
+CMD ["/bin/bash", "-c", "/app/simulador; echo ' Simulador finalizado. Contenedor en espera.'; tail -f /dev/null"]
