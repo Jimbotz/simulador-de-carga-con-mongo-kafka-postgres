@@ -6,6 +6,9 @@
     "database": "SyntheticDB", 
     "collection": "Users",
     "pipeline": "[]",
-    "publish.full.document.only": "true" 
+    "publish.full.document.only": "true",
+    "change.stream.full.document": "updateLookup",
+    "output.format.value": "schema",
+    "output.schema.infer.value": "true"
   }
 }

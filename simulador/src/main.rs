@@ -37,9 +37,9 @@ fn mongo_uri() -> String {
     //})
     std::env::var("MONGO_URI").expect("MONGO_URI environment variable not set")
 }
-const NUM_WORKERS: usize = 2;
-const REGISTROS_A_CARGAR: usize = 1_000_000;
-const IDS_POR_WORKER: usize = 50_000;
+const NUM_WORKERS: usize = 10;
+const REGISTROS_A_CARGAR: usize = 100_000;
+const IDS_POR_WORKER: usize = 10_000;
 const MAX_IDS_LOCALES: usize = 100_000; // techo para evitar memory leak
 const DURACION_SIMULACION_SEGS: u64 = 300; // 5 minutos exactos
 const REGISTROS_CALENTAMIENTO: usize = 5_000; // inserts iniciales si BD vacía
@@ -331,7 +331,7 @@ async fn trabajador(
                     match col
                         .update_one(
                             doc! { "_id": id_del, "estatus": { "$ne": "eliminado" } },
-                            doc! { "$set": { "estatus": "eliminado", "deleted_at": ts } },
+                            doc! { "$set": { "estatus": "eliminado", "deleted_at": ts } }, // UTC DATE
                             None,
                         )
                         .await

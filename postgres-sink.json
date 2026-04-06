@@ -1,0 +1,24 @@
+{
+  "name": "postgres-sink-connector",
+  "config": {
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "topics": "SyntheticDB.Users",
+    "connection.url": "jdbc:postgresql://postgres:5432/datawarehouse",
+    "connection.user": "admin",
+    "connection.password": "testing",
+    "insert.mode": "upsert",
+    "pk.mode": "record_value",
+    "pk.fields": "_id",
+    "auto.create": "true",
+    "auto.evolve": "true",
+    "table.name.format": "raw_users",
+    
+    "transforms": "stringifyArrays,flattenObjects",
+
+    "transforms.stringifyArrays.type": "com.github.maxprosper.smt.stringifyjson.StringifyJson$Value",
+    "transforms.stringifyArrays.targetFields": "datos_mixtos,historial_compras,sesiones_activas,metadata_compleja,caso_especial",
+
+    "transforms.flattenObjects.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+    "transforms.flattenObjects.delimiter": "_"
+  }
+}

@@ -8,7 +8,7 @@ from faker_persona_mx import PersonaGenerator
 logging.getLogger("faker_persona_mx").setLevel(logging.CRITICAL)
 
 ARCHIVO_SALIDA = "/data/usuarios_sinteticos.csv"
-TOTAL_REGISTROS = 1_000_000 # dos millones de registros, eso se puede cambiar aca (1000000)
+TOTAL_REGISTROS = 100_000 # dos millones de registros, eso se puede cambiar aca (1000000)
 TAMAÑO_LOTE    = 10_000
 
 
